@@ -1,0 +1,2 @@
+arn:aws:iam::aws:policy/AmazonGlacierReadOnlyAccess
+arn:aws:iam::aws:policy/AWSDirectConnectReadOnlyAccess
