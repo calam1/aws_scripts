@@ -12,6 +12,21 @@
     <script src="lib/amazon-cognito-identity.min.js"></script>
 
     <script>
+        // global variable to be set
+        var clientId;
+        var poolId;
+        var identityPoolId;
+
+        function setIds(object) {
+            clientId = object['clientId'].value;
+            poolId = object['poolId'].value;
+            identityPoolId = object['identityPoolId'].value;
+
+            console.log('clientId value:', clientId);
+            console.log('poolId value:', poolId );
+            console.log('clientId value:', identityPoolId);
+        };
+
         function createIdentityId() {
             AWS.config.region = 'us-east-1';
             var cognitoidentity = new AWS.CognitoIdentity({
@@ -256,6 +271,26 @@
 
     <form action="javascript:;" enctype="application/json" method="post" onsubmit="createIdentityId()">
         <input type="submit" value="Create IdentityId">
+    </form>
+    <br>
+     <form action="javascript:;" enctype="application/json" method="post" onsubmit="setIds(this)">
+        <table>
+            <tr>
+                <td align="right">clientId:</td>
+                <td align="left"> <input type="text" name="clientId" value=""></td>
+            </tr>
+            <tr>
+                <td align="right">poolId:</td>
+                <td align="left"><input type="text" name="poolId" value=""></td>
+            </tr>
+             <tr>
+                <td align="right">identityPoolId:</td>
+                <td align="left"><input type="text" name="identityPoolId" value=""></td>
+            </tr>
+            <tr>
+                <td align="left"><input type="submit" value="Set Ids"></td>
+            </tr>
+        </table>
     </form>
     <br>
     <form action="javascript:;" enctype="application/json" method="post" onsubmit="register(this)">
