@@ -12,6 +12,30 @@
     <script src="lib/amazon-cognito-identity.min.js"></script>
 
     <script>
+        function createIdentityId() {
+            AWS.config.region = 'us-east-1';
+            var cognitoidentity = new AWS.CognitoIdentity({
+                apiVersion: '2014-06-30'
+            });
+
+            // getId - http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/CognitoIdentity.html#getId-property
+            var params = {
+                IdentityPoolId: 'us-east-1:633d5440-9196-45f7-839c-0c118877b380',
+            };
+
+            // Generates (or retrieves) a Cognito ID. Supplying multiple logins (attribute in params, you can pass in
+            // will create an implicit linked account.
+            // This is a public API. You do not need any credentials to call this API.
+            cognitoidentity.getId(params, function(err, data) {
+                if (err) {
+                    console.log('error', err);
+                } else {
+                    console.log('cognito id:', data);
+                    alert('cognito id/ idendityId:' + data.IdentityId);
+                }
+            });
+        }
+
         function register(obj) {
             //alert(obj['username'].value);
             //alert(obj['password'].value);
@@ -230,6 +254,10 @@
 <body>
     <h1>cognito example</h1>
 
+    <form action="javascript:;" enctype="application/json" method="post" onsubmit="createIdentityId()">
+        <input type="submit" value="Create IdentityId">
+    </form>
+    <br>
     <form action="javascript:;" enctype="application/json" method="post" onsubmit="register(this)">
         <table>
             <tr>
