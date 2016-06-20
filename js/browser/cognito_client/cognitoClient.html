@@ -10,46 +10,39 @@
     <script src="lib/sjcl.js"></script>
     <script src="lib/aws-sdk.min.js"></script>
     <script src="lib/amazon-cognito-identity.min.js"></script>
-</head>
-
-<body>
-    <h1>cognito example</h1>
-
-    <form action="javascript:;" enctype="application/json" method="post" onsubmit="register(this)">
-        username: <input type="text" name="username" value=""> password: <input type="text" name="password" value=""> email : <input type="text" name="email" value="">
-        <input type="submit" value="Register">
-    </form>
-    <br>
-    <form action="javascript:;" enctype="application/json" method="post" onsubmit="login(this)">
-        username: <input type="text" name="username" value=""> password: <input type="text" name="password" value="">
-        <input type="submit" value="Login">
-    </form>
-    <br>
-    <form action="javascript:;" enctype="application/json" method="post" onsubmit="getAttrs(this)">
-        <input type="submit" value="Get Attributes">
-    </form>
 
     <script>
         function register(obj) {
             //alert(obj['username'].value);
             //alert(obj['password'].value);
             //alert(obj['email'].value);
+            //alert(obj['identityId'].value);
+
+            var username = obj['username'].value;
+            var password = obj['password'].value;
+            var email = obj['email'].value;
+            var identityId = obj['identityId'].value;
 
             // to attach this user to an identity id we need set the credential 
             AWS.config.credentials = new AWS.CognitoIdentityCredentials({
                 IdentityPoolId: 'us-east-1:633d5440-9196-45f7-839c-0c118877b380',
-                //   IdentityId: 'us-east-1:18c9c572-0d23-4784-a961-fe2022705734'
+                IdentityId: identityId
             });
 
             AWS.config.region = 'us-east-1';
-            AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+
+
+            AWSCognito.config.credentials = new AWS.CognitoIdentityCredentials({
                 IdentityPoolId: 'us-east-1:633d5440-9196-45f7-839c-0c118877b380',
+                IdentityId: identityId
             });
 
             AWSCognito.config.region = 'us-east-1';
-            AWSCognito.config.credentials = new AWS.CognitoIdentityCredentials({
-                IdentityPoolId: 'us-east-1:633d5440-9196-45f7-839c-0c118877b380',
-            });
+
+            AWSCognito.config.update({
+                accessKeyId: 'anything',
+                secretAccessKey: 'anything'
+            })
 
             var poolData = {
                 UserPoolId: 'us-east-1_DLWkDQlGD',
@@ -61,14 +54,14 @@
 
             var dataEmail = {
                 Name: 'email',
-                Value: 'chrislam67@gmail.com'
+                Value: email
             };
 
             var attributeEmail = new AWSCognito.CognitoIdentityServiceProvider.CognitoUserAttribute(dataEmail);
 
             attributeList.push(attributeEmail);
 
-            userPool.signUp('clam', 'password', attributeList, null, function(err, result) {
+            userPool.signUp(username, password, attributeList, null, function(err, result) {
                 if (err) {
                     alert(err);
                     return;
@@ -79,11 +72,39 @@
             });
         };
 
+        function confirm(object) {
+            var username = obj['username'].value;
+            var confirmationCode = obj['confirmationCode'].value;
+
+            var poolData = {
+                UserPoolId: 'us-east-1_DLWkDQlGD',
+                ClientId: '7civ431fec41bb280096co5vp8'
+            };
+
+            var userPool = new AWSCognito.CognitoIdentityServiceProvider.CognitoUserPool(poolData);
+            var userData = {
+                Username: 'username',
+                Pool: userPool
+            };
+
+            var cognitoUser = new AWSCognito.CognitoIdentityServiceProvider.CognitoUser(userData);
+            cognitoUser.confirmRegistration(confirmationCode, true, function(err, result) {
+                if (err) {
+                    alert(err);
+                    return;
+                }
+                console.log('call result: ' + result);
+            });
+        };
+
         function login(object) {
+            var username = obj['username'].value;
+            var password = obj['password'].value;
+            var identityId = obj['identityId'].value;
+
             var creds = new AWS.CognitoIdentityCredentials({
                 IdentityPoolId: 'us-east-1:633d5440-9196-45f7-839c-0c118877b380',
-                IdentityId: 'us-east-1:0e164f53-b87b-4082-a784-38c4f8e39a2e'
-                //IdentityId: 'us-east-1:7c5d4a1e-5baa-4bd6-a49c-722dd7d9589b' - by passing the identity id we can link the user with the identity
+                IdentityId: identityId
 
             });
 
@@ -95,16 +116,14 @@
 
             AWSCognito.config.credentials = new AWS.CognitoIdentityCredentials({
                 IdentityPoolId: 'us-east-1:633d5440-9196-45f7-839c-0c118877b380',
-                IdentityId: 'us-east-1:0e164f53-b87b-4082-a784-38c4f8e39a2e'
-                //IdentityId: 'us-east-1:7c5d4a1e-5baa-4bd6-a49c-722dd7d9589b' - by passing the identity id we can link the user with the identity
-
+                IdentityId: identityId
             });
 
             AWSCognito.config.region = 'us-east-1';
 
             var authenticationData = {
-                Username: 'clam',
-                Password: 'password',
+                Username: username,
+                Password: password
             };
             var authenticationDetails = new AWSCognito.CognitoIdentityServiceProvider.AuthenticationDetails(authenticationData);
             var poolData = {
@@ -113,7 +132,7 @@
             };
             var userPool = new AWSCognito.CognitoIdentityServiceProvider.CognitoUserPool(poolData);
             var userData = {
-                Username: 'clam',
+                Username: username,
                 Pool: userPool
             };
             var cognitoUser = new AWSCognito.CognitoIdentityServiceProvider.CognitoUser(userData);
@@ -134,7 +153,7 @@
 
                     AWS.config.credentials.get(function(err) {
                         if (!err) {
-                            console.log('Cognito Identity Id:'  + AWS.config.credentials.identityId);
+                            console.log('Cognito Identity Id:' + AWS.config.credentials.identityId);
                         }
                     });
 
@@ -165,6 +184,35 @@
         };
 
         function getAttrs(object) {
+            var creds = new AWS.CognitoIdentityCredentials({
+                IdentityPoolId: 'us-east-1:633d5440-9196-45f7-839c-0c118877b380',
+                IdentityId: 'us-east-1:0e164f53-b87b-4082-a784-38c4f8e39a2e'
+            });
+
+            AWS.config.credentials = creds;
+
+            AWS.config.region = 'us-east-1';
+            AWS.config.credentials.get(function(err) {
+                if (!err) {
+                    console.log('Cognito Identity Id:' + AWS.config.credentials.identityId);
+                }
+            });
+
+            var authenticationData = {
+                Username: 'clam',
+                Password: 'password',
+            };
+            var authenticationDetails = new AWSCognito.CognitoIdentityServiceProvider.AuthenticationDetails(authenticationData);
+            var poolData = {
+                UserPoolId: 'us-east-1_DLWkDQlGD',
+                ClientId: '7civ431fec41bb280096co5vp8'
+            };
+            var userPool = new AWSCognito.CognitoIdentityServiceProvider.CognitoUserPool(poolData);
+            var userData = {
+                Username: 'clam',
+                Pool: userPool
+            };
+            var cognitoUser = new AWSCognito.CognitoIdentityServiceProvider.CognitoUser(userData);
 
             cognitoUser.getUserAttributes(function(err, result) {
                 if (err) {
@@ -177,6 +225,76 @@
             });
         }
     </script>
+</head>
+
+<body>
+    <h1>cognito example</h1>
+
+    <form action="javascript:;" enctype="application/json" method="post" onsubmit="register(this)">
+        <table>
+            <tr>
+                <td align="right">username:</td>
+                <td align="left"> <input type="text" name="username" value=""></td>
+            </tr>
+            <tr>
+                <td align="right">password:</td>
+                <td align="left"><input type="text" name="password" value=""></td>
+            </tr>
+            <tr>
+                <td align="right">email:</td>
+                <td align="left"><input type="text" name="email" value=""></td>
+            </tr>
+            <tr>
+                <td align="right">identityId:</td>
+                <td align="left"><input type="text" name="identityId" value=""></td>
+            </tr>
+            <tr>
+                <td align="left"><input type="submit" value="Register"></td>
+            </tr>
+        </table>
+    </form>
+    <br>
+    <form action="javascript:;" enctype="application/json" method="post" onsubmit="confirm(this)">
+        <table>
+            <tr>
+                <td align="right">username:</td>
+                <td align="left"> <input type="text" name="username" value=""></td>
+            </tr>
+            <tr>
+                <td align="right">confirmation code:</td>
+                <td align="left"><input type="text" name="confirmationCode" value=""></td>
+            </tr>
+            <tr>
+                <td align="left"><input type="submit" value="Confirm"></td>
+            </tr>
+        </table>
+    </form>
+    <br>
+    <form action="javascript:;" enctype="application/json" method="post" onsubmit="login(this)">
+        <table>
+            <tr>
+                <td align="right">username:</td>
+                <td align="left"> <input type="text" name="username" value=""></td>
+            </tr>
+            <tr>
+                <td align="right">password:</td>
+                <td align="left"><input type="text" name="password" value=""></td>
+            </tr>
+            <tr>
+                <td align="right">identityId:</td>
+                <td align="left"><input type="text" name="identityId" value=""></td>
+            </tr>
+            <tr>
+                <td align="left"><input type="submit" value="Login"></td>
+            </tr>
+        </table>
+    </form>
+    <br>
+    <form action="javascript:;" enctype="application/json" method="post" onsubmit="getAttrs(this)">
+        <input type="submit" value="Get Attributes">
+    </form>
+
+
 
 </body>
 
