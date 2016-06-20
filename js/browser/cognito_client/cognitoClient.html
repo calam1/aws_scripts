@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Cognito Example</title>
+    <script src="lib/aws-cognito-sdk.min.js"></script>
+    <script src="lib/jsbn.js"></script>
+    <script src="lib/jsbn2.js"></script>
+    <script src="lib/moment.js"></script>
+    <script src="lib/sjcl.js"></script>
+    <script src="lib/aws-sdk.min.js"></script>
+    <script src="lib/amazon-cognito-identity.min.js"></script>
+</head>
+
+<body>
+    <h1>cognito example</h1>
+
+    <form action="javascript:;" enctype="application/json" method="post" onsubmit="register(this)">
+        Data:<br>
+        <input type="text" name="data" value="">
+        <input type="submit" value="Register">
+    </form>
+
+    <form action="javascript:;" enctype="application/json" method="post" onsubmit="login(this)">
+        Data:<br>
+        <input type="text" name="data" value="">
+        <input type="submit" value="Login">
+    </form>
+
+    <form action="javascript:;" enctype="application/json" method="post" onsubmit="getAttrs(this)">
+        Data:<br>
+        <input type="text" name="data" value="">
+        <input type="submit" value="Get Attributes">
+    </form>
+
+    <script>
+        function register(obj) {
+            AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+                IdentityPoolId: 'us-east-1:633d5440-9196-45f7-839c-0c118877b380',
+            });
+
+            AWS.config.region = 'us-east-1';
+            AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+                IdentityPoolId: 'us-east-1:633d5440-9196-45f7-839c-0c118877b380',
+            });
+
+            AWSCognito.config.region = 'us-east-1';
+            AWSCognito.config.credentials = new AWS.CognitoIdentityCredentials({
+                IdentityPoolId: 'us-east-1:633d5440-9196-45f7-839c-0c118877b380',
+            });
+
+            var poolData = {
+                UserPoolId: 'us-east-1_DLWkDQlGD',
+                ClientId: '7civ431fec41bb280096co5vp8'
+            };
+            var userPool = new AWSCognito.CognitoIdentityServiceProvider.CognitoUserPool(poolData);
+
+            var attributeList = [];
+
+            var dataEmail = {
+                Name: 'email',
+                Value: 'chrislam67@gmail.com'
+            };
+
+            var attributeEmail = new AWSCognito.CognitoIdentityServiceProvider.CognitoUserAttribute(dataEmail);
+
+            attributeList.push(attributeEmail);
+
+            userPool.signUp('clam', 'password', attributeList, null, function(err, result) {
+                if (err) {
+                    alert(err);
+                    return;
+                }
+                cognitoUser = result.user;
+                console.log('cognito user object:', cognitoUser);
+                console.log('user name is ' + cognitoUser.getUsername());
+            });
+        };
+
+        function login(object) {
+            var creds = new AWS.CognitoIdentityCredentials({
+                IdentityPoolId: 'us-east-1:633d5440-9196-45f7-839c-0c118877b380',
+                IdentityId: 'us-east-1:7c5d4a1e-5baa-4bd6-a49c-722dd7d9589b'
+
+            });
+
+            AWS.config.credentials = creds;
+
+            AWS.config.region = 'us-east-1';
+
+            console.log('creds values before authentication', creds);
+
+            AWSCognito.config.credentials = new AWS.CognitoIdentityCredentials({
+                IdentityPoolId: 'us-east-1:633d5440-9196-45f7-839c-0c118877b380',
+            });
+
+            AWSCognito.config.region = 'us-east-1';
+
+            var authenticationData = {
+                Username: 'clam2',
+                Password: 'password',
+            };
+            var authenticationDetails = new AWSCognito.CognitoIdentityServiceProvider.AuthenticationDetails(authenticationData);
+            var poolData = {
+                UserPoolId: 'us-east-1_DLWkDQlGD',
+                ClientId: '7civ431fec41bb280096co5vp8'
+            };
+            var userPool = new AWSCognito.CognitoIdentityServiceProvider.CognitoUserPool(poolData);
+            var userData = {
+                Username: 'clam2',
+                Pool: userPool
+            };
+            var cognitoUser = new AWSCognito.CognitoIdentityServiceProvider.CognitoUser(userData);
+            cognitoUser.authenticateUser(authenticationDetails, {
+                onSuccess: function(result) {
+                    console.log('access token + ' + result.getAccessToken().getJwtToken());
+
+                    console.log('result xxxxxx', result);
+                    //AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+                    //    IdentityPoolId: 'us-east-1:633d5440-9196-45f7-839c-0c118877b380',
+                    //    Logins: {
+                    //        // Change the key below according to the specific region your user pool is in.
+                    //        'cognito-idp.us-east-1.amazonaws.com/us-east-1_DLWkDQlGD': result.getIdToken().getJwtToken()
+                    //    }
+                    //});
+                    creds.params.Logins = {
+                        'cognito-idp.us-east-1.amazonaws.com/us-east-1_DLWkDQlGD': result.getIdToken().getJwtToken()
+                    };
+                    creds.expired = true;
+
+                    console.log('creds.params values after authentication', creds.params);
+                    console.log('creds values after authentication', creds);
+
+
+                    // Instantiate aws sdk service objects now that the credentials have been updated.
+                    // example: var s3 = new AWS.S3();
+
+                },
+
+                onFailure: function(err) {
+                    alert(err);
+                },
+
+            });
+
+        };
+
+        function getAttrs(object) {
+            
+            cognitoUser.getUserAttributes(function(err, result) {
+                if (err) {
+                    alert(err);
+                    return;
+                }
+                for (i = 0; i < result.length; i++) {
+                    console.log('attribute ' + result[i].getName() + ' has value ' + result[i].getValue());
+                }
+            });
+        }
+    </script>
+
+</body>
+
+</html>

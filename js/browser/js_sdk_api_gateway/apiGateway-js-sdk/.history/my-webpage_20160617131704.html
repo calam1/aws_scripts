@@ -1,0 +1,55 @@
+<html>
+
+<head>
+    <script type="text/javascript" src="lib/axios/dist/axios.standalone.js"></script>
+    <script type="text/javascript" src="lib/CryptoJS/rollups/hmac-sha256.js"></script>
+    <script type="text/javascript" src="lib/CryptoJS/rollups/sha256.js"></script>
+    <script type="text/javascript" src="lib/CryptoJS/components/hmac.js"></script>
+    <script type="text/javascript" src="lib/CryptoJS/components/enc-base64.js"></script>
+    <script type="text/javascript" src="lib/url-template/url-template.js"></script>
+    <script type="text/javascript" src="lib/apiGatewayCore/sigV4Client.js"></script>
+    <script type="text/javascript" src="lib/apiGatewayCore/apiGatewayClient.js"></script>
+    <script type="text/javascript" src="lib/apiGatewayCore/simpleHttpClient.js"></script>
+    <script type="text/javascript" src="lib/apiGatewayCore/utils.js"></script>
+    <script type="text/javascript" src="apigClient.js"></script>
+</head>
+
+<body>
+    <h1>api gateway generated sdk example</h1>
+
+    <form action="javascript:;" method="post" onsubmit="myFunction(this)">
+        Data:<br>
+        <input type="text" name="data" value="">
+        <input type="submit" value="Submit">
+    </form>
+
+    <script>
+        function myFunction(obj) {
+            //alert(obj['data'].value);
+
+            window.apigClient = apigClientFactory.newClient({apiKey: 'NgOYFQJhC25lWH7YNNVqTaEbiL2Hj8rP7f3M9rVc'});
+
+            var params = {
+            };
+
+            var body = {
+                
+            };
+
+            var additionalParams = {
+            };
+
+            window.apigClient.userPost(params, body, additionalParams)
+                .then(function(result) {
+                    console.log('this is the result', result);
+                    // Add success callback code here.
+                }).catch(function(result) {
+                    // Add error callback code here.
+                    console.log('this is an error', result); 
+                });
+        }
+    </script>
+   
+</body>
+
+</html>
