@@ -19,6 +19,11 @@
 
     <h3> client, user pool, and identity pool data </h3>
 
+    <h3>Notes</h3><br> ClientId: 7civ431fec41bb280096co5vp8<br> UserPoolId: us-east-1_DLWkDQlGD<br> IdentityPoolId: us-east-1:633d5440-9196-45f7-839c-0c118877b380<br><p/>
+    
+
+
+    <h3> Values used in the functions (if blank then the default values are what is stated in the notes above) </h3>
     <label>Client Id: </label>
     <span id="clientId"></span>
     <br>
@@ -33,6 +38,7 @@
 
 
     <h3> set client, user pool, and identity pool data </h3>
+    <h4> if you don't set the values then the values used are whatever is in the Notes section above </h4>
 
     <form action="javascript:;" enctype="application/json" method="post" onsubmit="setIds(this)">
         <table>
@@ -87,6 +93,9 @@
             </tr>
         </table>
     </form>
+
+    <pre id="signUpResponse"></pre>
+
     <br>
 
     <h3> confirm signup / registration</h3>
@@ -106,6 +115,9 @@
             </tr>
         </table>
     </form>
+
+    <pre id="confirmResponse"></pre>
+
     <br>
 
     <h3> login </h3>
@@ -129,6 +141,12 @@
             </tr>
         </table>
     </form>
+
+    <pre id="loginResponse"></pre>
+    <p/>
+    <pre id="credentials"></pre>
+
+
     <br>
 
     <h3> get user attributes - NOT WORKING YET</h3>
@@ -143,9 +161,9 @@
 
     <script>
         // global variable to be set
-        var clientId;
-        var poolId;
-        var identityPoolId;
+        var clientId = '7civ431fec41bb280096co5vp8';
+        var poolId = 'us-east-1_DLWkDQlGD';
+        var identityPoolId = 'us-east-1:633d5440-9196-45f7-839c-0c118877b380';
 
         function setIds(object) {
             clientId = object['clientId'].value;
@@ -200,17 +218,23 @@
 
             // to attach this user to an identity id we need set the credential 
             AWS.config.credentials = new AWS.CognitoIdentityCredentials({
-                IdentityPoolId: 'us-east-1:633d5440-9196-45f7-839c-0c118877b380',
-                IdentityId: identityId
+                IdentityPoolId: identityPoolId
             });
+
+            if (identityId) {
+                AWS.config.credentials.IdentityId = idendityId;
+            }
 
             AWS.config.region = 'us-east-1';
 
 
             AWSCognito.config.credentials = new AWS.CognitoIdentityCredentials({
-                IdentityPoolId: 'us-east-1:633d5440-9196-45f7-839c-0c118877b380',
-                IdentityId: identityId
+                IdentityPoolId: identityPoolId
             });
+
+            if (identityId) {
+                AWSCognito.config.credentials.IdentityId = idendityId;
+            }
 
             AWSCognito.config.region = 'us-east-1';
 
@@ -220,8 +244,8 @@
             })
 
             var poolData = {
-                UserPoolId: 'us-east-1_DLWkDQlGD',
-                ClientId: '7civ431fec41bb280096co5vp8'
+                UserPoolId: poolId,
+                ClientId: clientId
             };
             var userPool = new AWSCognito.CognitoIdentityServiceProvider.CognitoUserPool(poolData);
 
@@ -243,22 +267,45 @@
                 }
                 cognitoUser = result.user;
                 console.log('cognito user object:', cognitoUser);
-                console.log('user name is ' + cognitoUser.getUsername());
+
+                document.getElementById("signUpResponse").innerHTML = JSON.stringify(result);
+
             });
         };
 
         function confirm(object) {
-            var username = obj['username'].value;
-            var confirmationCode = obj['confirmationCode'].value;
+            var username = object['username'].value;
+            var confirmationCode = object['confirmationCode'].value;
+
+            AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+                IdentityPoolId: identityPoolId
+            });
+
+            //if (identityId) {
+            //    AWS.config.credentials.IdentityId = idendityId;
+            //}
+
+            AWS.config.region = 'us-east-1';
+
+
+            AWSCognito.config.credentials = new AWS.CognitoIdentityCredentials({
+                IdentityPoolId: identityPoolId
+            });
+
+            //if (identityId) {
+            //    AWSCognito.config.credentials.IdentityId = idendityId;
+            //}
+
+            AWSCognito.config.region = 'us-east-1';
 
             var poolData = {
-                UserPoolId: 'us-east-1_DLWkDQlGD',
-                ClientId: '7civ431fec41bb280096co5vp8'
+                UserPoolId: poolId,
+                ClientId: clientId
             };
 
             var userPool = new AWSCognito.CognitoIdentityServiceProvider.CognitoUserPool(poolData);
             var userData = {
-                Username: 'username',
+                Username: username,
                 Pool: userPool
             };
 
@@ -269,32 +316,38 @@
                     return;
                 }
                 console.log('call result: ' + result);
+                document.getElementById("confirmResponse").innerHTML = JSON.stringify(result);
+
             });
         };
 
         function login(object) {
-            var username = obj['username'].value;
-            var password = obj['password'].value;
-            var identityId = obj['identityId'].value;
+            var username = object['username'].value;
+            var password = object['password'].value;
+            var identityId = object['identityId'].value;
 
             var creds = new AWS.CognitoIdentityCredentials({
-                IdentityPoolId: 'us-east-1:633d5440-9196-45f7-839c-0c118877b380',
-                IdentityId: identityId
-
+                IdentityPoolId: identityPoolId
             });
 
             AWS.config.credentials = creds;
+
+            if (identityId) {
+                AWS.config.credentials.IdentityId = idendityId;
+            }
+
 
             AWS.config.region = 'us-east-1';
 
             console.log('creds values before authentication', creds);
 
-            AWSCognito.config.credentials = new AWS.CognitoIdentityCredentials({
-                IdentityPoolId: 'us-east-1:633d5440-9196-45f7-839c-0c118877b380',
-                IdentityId: identityId
-            });
+            AWSCognito.config.credentials = creds;
 
             AWSCognito.config.region = 'us-east-1';
+
+            if (identityId) {
+                AWSCognito.config.credentials.IdentityId = idendityId;
+            }
 
             var authenticationData = {
                 Username: username,
@@ -302,8 +355,8 @@
             };
             var authenticationDetails = new AWSCognito.CognitoIdentityServiceProvider.AuthenticationDetails(authenticationData);
             var poolData = {
-                UserPoolId: 'us-east-1_DLWkDQlGD',
-                ClientId: '7civ431fec41bb280096co5vp8'
+                UserPoolId: poolId,
+                ClientId: clientId
             };
             var userPool = new AWSCognito.CognitoIdentityServiceProvider.CognitoUserPool(poolData);
             var userData = {
@@ -331,6 +384,11 @@
                             console.log('Cognito Identity Id:' + AWS.config.credentials.identityId);
                         }
                     });
+
+                    document.getElementById("loginResponse").innerHTML = JSON.stringify(result);
+                    document.getElementById("credentials").innerHTML = JSON.stringify(AWS.config.credentials);
+                    
+
 
                     // Instantiate aws sdk service objects now that the credentials have been updated.
                     // example: var s3 = new AWS.S3();
