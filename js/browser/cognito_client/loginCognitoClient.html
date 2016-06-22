@@ -176,82 +176,118 @@
             };
             cognitoUser = new AWSCognito.CognitoIdentityServiceProvider.CognitoUser(userData);
             console.log('AWS Credentials Config:', JSON.stringify(AWS.config.credentials));
+
+            //for my own sanity - this occurs cause of caching is my guess, I think you can manage this by using the functions in the client SDK
+            if (AWS.config.credentials.params.IdentityId) {
+                alert('if you see this alert, the error is caused by page caching the AWS config credentials, you may be able to manage this with the functions provided in the client side SDK for cognito, since this is a test page and we are attempting to log in different users, it may be an issue. Look at the console for the pre existing Identity Id and additional info' + AWS.config.credentials.params.IdentityId);
+                console.log('how the hell do we have an identity id already?, prob caching of the AWS on the page', AWS.config.credentials.params.IdentityId);
+                console.log('we are going to error out because of this!!!!!!!!!!')
+            }
+
             console.log('AWSCognito Credentials Config:', JSON.stringify(AWSCognito.config.credentials));
             console.log('right before authenticate user');
             // this will return the access key , secret key, etc, and link the user to the identity id, if we set the identity id in the creds
             cognitoUser.authenticateUser(authenticationDetails, {
-                    onSuccess: function(result) {
-                        console.log('access token = ', result.getAccessToken().getJwtToken());
-                        console.log('authenticate user result', result);
+                onSuccess: function(result) {
+                    console.log('access token = ', result.getAccessToken().getJwtToken());
+                    console.log('authenticate user result', result);
 
-                        creds.params.Logins = {};
-                        creds.params.Logins['cognito-idp.us-east-1.amazonaws.com/us-east-1_DLWkDQlGD'] = result.getIdToken().getJwtToken();
+                    creds.params.Logins = {};
+                    creds.params.Logins['cognito-idp.us-east-1.amazonaws.com/us-east-1_DLWkDQlGD'] = result.getIdToken().getJwtToken();
 
-                        AWS.config.credentials.expired = true;
+                    AWS.config.credentials.expired = true;
 
-                        console.log('AWS.config.credentials.params values after authentication', AWS.config.credentials.params);
-                        console.log('AWS.config.credentials values after authentication', AWS.config.credentials);
+                    console.log('AWS.config.credentials.params values after authentication', AWS.config.credentials.params);
+                    console.log('AWS.config.credentials values after authentication', AWS.config.credentials);
 
-                        AWS.config.credentials.get(function(err, resp) {
-                            if (err) {
-                                console.log('get creds error', err);
-                                alert('get creds error' + err);
-                            } else {
-                                console.log('get creds success', AWS.config.credentials);
-                            }
-                        });
+                    AWS.config.credentials.get(function(err, resp) {
+                        if (err) {
+                            console.log('get creds error', err);
+                            alert('get creds error' + err);
+                        } else {
+                            console.log('get creds success', AWS.config.credentials);
 
-                        document.getElementById("loginResponse").innerHTML = JSON.stringify(result);
-                        document.getElementById("credentials").innerHTML = JSON.stringify(AWS.config.credentials.params);
+                            // Credentials will be available when this function is called.
+                            var accessKeyId = AWS.config.credentials.accessKeyId;
+                            var secretAccessKey = AWS.config.credentials.secretAccessKey;
+                            var sessionToken = AWS.config.credentials.sessionToken;
 
-                        // Instantiate aws sdk service objects now that the credentials have been updated.
-                        // example: var s3 = new AWS.S3();
+                            console.log("accessKeyId: " + accessKeyId);
+                        }
+                    });
+
+                    console.log('username', cognitoUser.getUsername());
+                    console.log('user session', cognitoUser.getSignInUserSession());
+                    //console.log('session', cognitoUser.getSession()); this errors out, maybe an issue with the SDK, erro coming from minified code
+
+                    document.getElementById("loginResponse").innerHTML = JSON.stringify(result);
+                    document.getElementById("credentials").innerHTML = JSON.stringify(AWS.config.credentials.params);
+
+                    // Instantiate aws sdk service objects now that the credentials have been updated.
+                    // example: var s3 = new AWS.S3();
 
 
-                        var s3 = new AWS.S3({
-                            region: 'us-east-1'
-                        });
-                        s3.listObjects({
-                            Bucket: 'bucket'
-                        }, function(err, data) {
-                            if (err) console.log(err);
-                            else console.log(data);
-                        });
-                    },
-                    onFailure: function(err) {
-                        alert(err);
-                    }
-                });
-            };
+                    // for the following to connect properly, edit the CORS config in S3 for the bucket in question
+                    /*
+<?xml version="1.0" encoding="UTF-8"?>
+<CORSConfiguration xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
+    <CORSRule>
+        <AllowedOrigin>*</AllowedOrigin>
+        <AllowedMethod>HEAD</AllowedMethod>
+        <AllowedMethod>GET</AllowedMethod>
+        <AllowedMethod>PUT</AllowedMethod>
+        <AllowedMethod>POST</AllowedMethod>
+        <AllowedMethod>DELETE</AllowedMethod>
+        <AllowedHeader>*</AllowedHeader>
+        <ExposeHeader>ETag</ExposeHeader>
+        <ExposeHeader>x-amz-meta-custom-header</ExposeHeader>
+    </CORSRule>
+</CORSConfiguration>
+*/
+                    var s3 = new AWS.S3({
+                        region: 'us-east-1'
+                    });
+                    s3.listObjects({
+                        Bucket: 'serverless.chris.cognito.create'
+                    }, function(err, data) {
+                        if (err) console.log(err);
+                        else console.log(data);
+                    });
+                },
+                onFailure: function(err) {
+                    alert(err);
+                }
+            });
+        };
 
-            function getAttrs(object) {
-                cognitoUser.getUserAttributes(function(err, result) {
-                    if (err) {
-                        alert(err);
-                        return;
-                    }
-                    for (i = 0; i < result.length; i++) {
-                        console.log('attribute ' + result[i].getName() + ' has value ' + result[i].getValue());
-                    }
+        function getAttrs(object) {
+            cognitoUser.getUserAttributes(function(err, result) {
+                if (err) {
+                    alert(err);
+                    return;
+                }
+                for (i = 0; i < result.length; i++) {
+                    console.log('attribute ' + result[i].getName() + ' has value ' + result[i].getValue());
+                }
 
-                    document.getElementById("getAttrsResponse").innerHTML = JSON.stringify(result);
+                document.getElementById("getAttrsResponse").innerHTML = JSON.stringify(result);
 
-                });
-            };
+            });
+        };
 
-            function signout() {
-                cognitoUser.signOut();
-            }
+        function signout() {
+            cognitoUser.signOut();
+        }
 
-            function deleteUser() {
-                cognitoUser.deleteUser(function(err, resp) {
-                    if (err) {
-                        console.log('error in deleter user', err);
-                    } else {
-                        console.log('success in deleting user', response);
-                    }
-                })
-            };
+        function deleteUser() {
+            cognitoUser.deleteUser(function(err, resp) {
+                if (err) {
+                    console.log('error in deleter user', err);
+                } else {
+                    console.log('success in deleting user', response);
+                }
+            })
+        };
     </script>
 
 </body>
