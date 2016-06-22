@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>Cognito Example</title>
+    <title>Sign up / Confirm Cognito Example</title>
     <script src="lib/aws-cognito-sdk.min.js"></script>
     <script src="lib/jsbn.js"></script>
     <script src="lib/jsbn2.js"></script>
@@ -15,12 +15,13 @@
 </head>
 
 <body>
-    <h1>cognito example</h1>
+    <h1>sign up cognito example</h1>
 
     <h3> client, user pool, and identity pool data </h3>
 
-    <h3>Notes</h3><br> ClientId: 7civ431fec41bb280096co5vp8<br> UserPoolId: us-east-1_DLWkDQlGD<br> IdentityPoolId: us-east-1:633d5440-9196-45f7-839c-0c118877b380<br><p/>
-    
+    <h3>Notes</h3><br> ClientId: 7civ431fec41bb280096co5vp8<br> UserPoolId: us-east-1_DLWkDQlGD<br> IdentityPoolId: us-east-1:633d5440-9196-45f7-839c-0c118877b380<br>
+    <p/>
+
 
 
     <h3> Values used in the functions (if blank then the default values are what is stated in the notes above) </h3>
@@ -117,48 +118,7 @@
     </form>
 
     <pre id="confirmResponse"></pre>
-
     <br>
-
-    <h3> login </h3>
-
-    <form action="javascript:;" enctype="application/json" method="post" onsubmit="login(this)">
-        <table>
-            <tr>
-                <td align="right">username:</td>
-                <td align="left"> <input type="text" name="username" value=""></td>
-            </tr>
-            <tr>
-                <td align="right">password:</td>
-                <td align="left"><input type="text" name="password" value=""></td>
-            </tr>
-            <tr>
-                <td align="right">identityId:</td>
-                <td align="left"><input type="text" name="identityId" value=""></td>
-            </tr>
-            <tr>
-                <td align="left"><input type="submit" value="Login"></td>
-            </tr>
-        </table>
-    </form>
-
-    <pre id="loginResponse"></pre>
-    <p/>
-    <pre id="credentials"></pre>
-
-
-    <br>
-
-    <h3> get user attributes </h3>
-
-    <form action="javascript:;" enctype="application/json" method="post" onsubmit="getAttrs(this)">
-        <input type="submit" value="Get Attributes">
-    </form>
-
-    <pre id="getAttrsResponse"></pre>
-
-
-
 
     <script>
         // global variable to be set
@@ -234,7 +194,7 @@
             AWSCognito.config.update({
                 accessKeyId: 'anything',
                 secretAccessKey: 'anything'
-            })
+            }) 
 
             var poolData = {
                 UserPoolId: poolId,
@@ -292,98 +252,7 @@
 
             });
         };
-
-        function login(object) {
-            var username = object['username'].value;
-            var password = object['password'].value;
-            var identityId = object['identityId'].value;
-
-            var authenticationData = {
-                Username: username,
-                Password: password
-            };
-            var authenticationDetails = new AWSCognito.CognitoIdentityServiceProvider.AuthenticationDetails(authenticationData);
-            var poolData = {
-                UserPoolId: poolId,
-                ClientId: clientId
-            };
-            var userPool = new AWSCognito.CognitoIdentityServiceProvider.CognitoUserPool(poolData);
-            var userData = {
-                Username: username,
-                Pool: userPool
-            };
-            cognitoUser = new AWSCognito.CognitoIdentityServiceProvider.CognitoUser(userData);
-            console.log('right before authenticate user');
-            // this will return the access key , secret key, etc, and link the user to the identity id, if we set the identity id in the creds
-            cognitoUser.authenticateUser(authenticationDetails, {
-                onSuccess: function(result) {
-                    console.log('access token + ' + result.getAccessToken().getJwtToken());
-
-                    console.log('authenticate user result', result);
-                    AWS.config.credentials.params.Logins = {
-                        'cognito-idp.us-east-1.amazonaws.com/us-east-1_DLWkDQlGD': result.getIdToken().getJwtToken()
-                    };
-                    AWS.config.credentials.expired = true;
-
-                    console.log('AWS.config.credentials.params values after authentication', AWS.config.credentials.params);
-                    console.log('AWS.config.credentials values after authentication', AWS.config.credentials);
-
-                    AWS.config.credentials.refresh(function(err) {
-                        if (err) {
-                            console.log('refresh error', err);
-                        } else {
-                            console.log('refreshed credentials', AWS.config.credentials);
-                            console.log('refreshed credential id', AWS.config.credentials.identityId);
-                        }
-                    })
-
-                    document.getElementById("loginResponse").innerHTML = JSON.stringify(result);
-                    document.getElementById("credentials").innerHTML = JSON.stringify(AWS.config.credentials.params);
-                    
-
-
-                    // Instantiate aws sdk service objects now that the credentials have been updated.
-                    // example: var s3 = new AWS.S3();
-
-
-
-                    //var s3 = new AWS.S3({
-                    //    region: 'us-east-1'
-                    //});
-                    //s3.listObjects({
-                    //    Bucket: 'bucket'
-                    //}, function(err, data) {
-                    //    if (err) console.log(err);
-                    //    else console.log(data);
-                    //});
-
-
-                },
-
-                onFailure: function(err) {
-                    alert(err);
-                },
-
-            });
-
-        };
-
-        function getAttrs(object) {
-            cognitoUser.getUserAttributes(function(err, result) {
-                if (err) {
-                    alert(err);
-                    return;
-                }
-                for (i = 0; i < result.length; i++) {
-                    console.log('attribute ' + result[i].getName() + ' has value ' + result[i].getValue());
-                }
-
-                document.getElementById("getAttrsResponse").innerHTML = JSON.stringify(result);
-
-            });
-        }
     </script>
-
 </body>
 
 </html>
