@@ -97,7 +97,8 @@
 
     <pre id="getAttrsResponse"></pre>
 
-    <h3> get S3 Bucket info </h3> <h5>*Bucket 'serverless.chris.cognito.create' is hard coded in function, has CORS config set up </h5>
+    <h3> get S3 Bucket info </h3>
+    <h5>*Bucket 'serverless.chris.cognito.create' is hard coded in function, has CORS config set up </h5>
 
     <form action="javascript:;" enctype="application/json" method="post" onsubmit="getS3BucketInfo(this)">
         <input type="submit" value="Get S3 Bucket Info">
@@ -108,6 +109,7 @@
     <br>
 
     <h3> sign out </h3>
+    <h5> there is no response for this, so not sure if it works</h5>
 
     <form action="javascript:;" enctype="application/json" method="post" onsubmit="signout()">
         <input type="submit" value="Sign Out">
@@ -118,6 +120,8 @@
     <form action="javascript:;" enctype="application/json" method="post" onsubmit="deleteUser()">
         <input type="submit" value="Delete User">
     </form>
+    <pre id="getDeleteUserResponse"></pre>
+
     <br>
 
     <script>
@@ -307,7 +311,8 @@
                 if (err) {
                     console.log('error in deleter user', err);
                 } else {
-                    console.log('success in deleting user', response);
+                    console.log('success in deleting user', resp);
+                    document.getElementById("getDeleteUserResponse").innerHTML = JSON.stringify(resp);
                 }
             })
         };
