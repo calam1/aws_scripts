@@ -17,12 +17,9 @@
 <body>
     <h1>login cognito example</h1>
 
-    <h3> client, user pool, and identity pool data </h3>
+    <h2> Cognito Identity functions</h2>
 
-    <h3>Notes</h3><br> ClientId: 7civ431fec41bb280096co5vp8<br> UserPoolId: us-east-1_DLWkDQlGD<br> IdentityPoolId: us-east-1:633d5440-9196-45f7-839c-0c118877b380<br>
-    <p/>
-
-
+    <h3>Default Values</h3> ClientId: 7civ431fec41bb280096co5vp8<br> UserPoolId: us-east-1_DLWkDQlGD<br> IdentityPoolId: us-east-1:633d5440-9196-45f7-839c-0c118877b380<br>
 
     <h3> Values used in the functions (if blank then the default values are what is stated in the notes above) </h3>
     <label>Client Id: </label>
@@ -37,9 +34,8 @@
     <span id="identityPoolId"></span>
     <br>
 
-
     <h3> set client, user pool, and identity pool data </h3>
-    <h4> if you don't set the values then the values used are whatever is in the Notes section above </h4>
+    <h5> * if you don't set the values then the values used are whatever is in the Notes section above </h5>
 
     <form action="javascript:;" enctype="application/json" method="post" onsubmit="setIds(this)">
         <table>
@@ -108,7 +104,7 @@
     <br>
 
     <h3> get S3 Bucket info </h3>
-    <h5>*Bucket 'serverless.chris.cognito.create' is hard coded in function, has CORS config set up </h5>
+    <h5>* Bucket 'serverless.chris.cognito.create' is hard coded in function, has CORS config set up </h5>
 
     <form action="javascript:;" enctype="application/json" method="post" onsubmit="getS3BucketInfo(this)">
         <input type="submit" value="Get S3 Bucket Info">
@@ -118,7 +114,7 @@
     <br>
 
     <h3> sign out </h3>
-    <h5> there is no response for this, so not sure if it works</h5>
+    <h5> * there is no response for this, so not sure if it works</h5>
 
     <form action="javascript:;" enctype="application/json" method="post" onsubmit="signout()">
         <input type="submit" value="Sign Out">
@@ -131,6 +127,28 @@
         <input type="submit" value="Delete User">
     </form>
     <pre id="getDeleteUserResponse"></pre>
+    <br>
+    <br>
+    <br>
+    <br>
+
+    <h2> Cognito Sync functions </h2>
+
+    <h3> list dataset </h3>
+
+    <form action="javascript:;" enctype="application/json" method="post" onsubmit="getCognitoSyncToken()">
+        <input type="submit" value="Get Cognito Dataset Information">
+    </form>
+    <pre id="getCognitoSyncTokenResponse"></pre>
+    <br>
+
+    <h3> add record to dataset - WARNING for now(will fix later) you must run function getCognitoSyncToken() which is the above function , 'list dataset'</h3>
+    <h5> * we are just adding the identityId </h5>
+
+    <form action="javascript:;" enctype="application/json" method="post" onsubmit="addRecord()">
+        <input type="submit" value="Add Cognito Dataset Record ">
+    </form>
+    <pre id="addRecordResponse"></pre>
     <br>
 
     <script>
@@ -169,8 +187,8 @@
                 }); 
             }
             */
-            
-            
+
+
             var username = object['username'].value;
             var password = object['password'].value;
             var identityId = object['identityId'].value;
@@ -211,7 +229,7 @@
             cognitoUser = new AWSCognito.CognitoIdentityServiceProvider.CognitoUser(userData);
             console.log('AWS Credentials Config:', JSON.stringify(AWS.config.credentials));
 
-            //for my own sanity - this occurs cause of caching is my guess, I think you can manage this by using the functions in the client SDK
+            //for my own sanity - this occurs cause of caching is my guess, this may be valid when converting an unauth to an auth user, so it depends
             if (AWS.config.credentials.params.IdentityId) {
                 alert('if you see this alert,it is caused by page caching the AWS config credentials, since this is a test page and we are attempting to log in different users, it may be an issue, but if you are transforming from an unauth to an auth user, this is NOT an error and legitimate. Look at the console for the pre existing Identity Id and additional info' + AWS.config.credentials.params.IdentityId);
                 console.log('how the hell do we have an identity id already?, prob caching of the AWS on the page', AWS.config.credentials.params.IdentityId);
@@ -232,7 +250,10 @@
                     AWS.config.credentials.expired = true;
 
                     console.log('AWS.config.credentials.params values after authentication', AWS.config.credentials.params);
+                    console.log('UserID: ', AWS.config.credentials.params.IdentityId);
+
                     console.log('AWS.config.credentials values after authentication', AWS.config.credentials);
+                    console.log('UserID: ', AWS.config.credentials.params.IdentityId);
 
                     AWS.config.credentials.get(function(err, resp) {
                         if (err) {
@@ -242,11 +263,13 @@
                             console.log('get creds success', AWS.config.credentials);
 
                             // Credentials will be available when this function is called.
-                            //var accessKeyId = AWS.config.credentials.accessKeyId;
+                            var accessKeyId = AWS.config.credentials.accessKeyId;
                             //var secretAccessKey = AWS.config.credentials.secretAccessKey;
                             //var sessionToken = AWS.config.credentials.sessionToken;
 
-                            //console.log("accessKeyId: " + accessKeyId);
+                            console.log("in creds.get - accessKeyId: " + accessKeyId);
+                            console.log('UserID: ', AWS.config.credentials.params.IdentityId);
+
                         }
                     });
 
@@ -359,6 +382,62 @@
                 } else {
                     console.log('create unauth user resp', AWS.config.credentials);
                     document.getElementById("createtUnauthUserResponse").innerHTML = 'Created an unauthorized user, idendity id value is: ' + AWS.config.credentials.identityId;
+                }
+            });
+        };
+
+        /////////////// cognito sync code
+
+        var COGNITO_DATASET_NAME = 'TEST_DATASET';
+        var COGNITO_SYNC_COUNT;
+        var COGNITO_SYNC_TOKEN;
+        var cognitosync;
+
+        function getCognitoSyncToken() {
+            // Other AWS SDKs will automatically use the Cognito Credentials provider
+            // configured in the JavaScript SDK.
+            console.log('get cognito sync token - region value', AWS.config.region);
+            cognitosync = new AWS.CognitoSync();
+            cognitosync.listRecords({
+                DatasetName: COGNITO_DATASET_NAME,
+                IdentityId: AWS.config.credentials.params.IdentityId,
+                IdentityPoolId: identityPoolId
+            }, function(err, data) {
+                if (err) console.log('listRecords: '.red + err, err.stack);
+                else {
+                    console.log('listRecords: ', JSON.stringify(data));
+                    COGNITO_SYNC_TOKEN = data.SyncSessionToken;
+                    COGNITO_SYNC_COUNT = data.DatasetSyncCount;
+                    console.log('SyncSessionToken: ', COGNITO_SYNC_TOKEN);
+                    console.log('DatasetSyncCount: ', COGNITO_SYNC_COUNT);
+
+                    document.getElementById("getCognitoSyncTokenResponse").innerHTML = JSON.stringify(data);
+                }
+            });
+        };
+
+        function addRecord() {
+
+            var params = {
+                DatasetName: COGNITO_DATASET_NAME,
+                IdentityId: AWS.config.credentials.params.IdentityId,
+                IdentityPoolId: identityPoolId,
+                SyncSessionToken: COGNITO_SYNC_TOKEN,
+                RecordPatches: [{
+                    Key: 'USER_ID', // required
+                    Op: 'replace', // required
+                    SyncCount: COGNITO_SYNC_COUNT,
+                    Value: AWS.config.credentials.params.IdentityId
+                }]
+            };
+
+            console.log('UserID: ', AWS.config.credentials.params.IdentityId);
+            cognitosync.updateRecords(params, function(err, data) {
+                if (err) {
+                    console.log('updateRecords: ', err, err.stack);
+                } else {
+                    console.log('updateRecords value: ', JSON.stringify(data));
+                    document.getElementById("addRecordResponse").innerHTML = JSON.stringify(data);
                 }
             });
         }
