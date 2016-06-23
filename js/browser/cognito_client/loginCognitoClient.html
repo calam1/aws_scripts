@@ -352,8 +352,15 @@
             AWSCognito.config.region = 'us-east-1';
             AWSCognito.config.credentials = creds;
 
-            document.getElementById("createtUnauthUserResponse").innerHTML = 'Created an unauthorized user';
-
+            AWS.config.credentials.get(function(err, resp) {
+                if (err) {
+                    console.log('create unauth user error', err);
+                    alert('create unauth user error' + err);
+                } else {
+                    console.log('create unauth user resp', AWS.config.credentials);
+                    document.getElementById("createtUnauthUserResponse").innerHTML = 'Created an unauthorized user, idendity id value is: ' + AWS.config.credentials.identityId;
+                }
+            });
         }
     </script>
 
