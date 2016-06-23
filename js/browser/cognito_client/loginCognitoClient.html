@@ -87,8 +87,6 @@
     <pre id="loginResponse"></pre>
     <p/>
     <pre id="credentials"></pre>
-
-
     <br>
 
     <h3> get user attributes </h3>
@@ -98,6 +96,14 @@
     </form>
 
     <pre id="getAttrsResponse"></pre>
+
+    <h3> get S3 Bucket info </h3> <h5>*Bucket 'serverless.chris.cognito.create' is hard coded in function, has CORS config set up </h5>
+
+    <form action="javascript:;" enctype="application/json" method="post" onsubmit="getS3BucketInfo(this)">
+        <input type="submit" value="Get S3 Bucket Info">
+    </form>
+
+    <pre id="getS3Response"></pre>
 
     <br>
 
@@ -243,7 +249,8 @@
         <ExposeHeader>x-amz-meta-custom-header</ExposeHeader>
     </CORSRule>
 </CORSConfiguration>
-*/
+                    */
+
                     var s3 = new AWS.S3({
                         region: 'us-east-1'
                     });
@@ -259,6 +266,22 @@
                 }
             });
         };
+
+        function getS3BucketInfo() {
+            var s3 = new AWS.S3({
+                region: 'us-east-1'
+            });
+            s3.listObjects({
+                Bucket: 'serverless.chris.cognito.create'
+            }, function(err, data) {
+                if (err) {
+                    console.log('s3 bucket info error', err);
+                } else {
+                    console.log('s3 bucket info response', data);
+                    document.getElementById("getS3Response").innerHTML = JSON.stringify(data);
+                }
+            });
+        }
 
         function getAttrs(object) {
             cognitoUser.getUserAttributes(function(err, result) {

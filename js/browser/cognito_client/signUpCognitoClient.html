@@ -242,7 +242,7 @@
             };
 
             cognitoUser = new AWSCognito.CognitoIdentityServiceProvider.CognitoUser(userData);
-            cognitoUser.confirmRegistration(confirmationCode, true, function(err, result) {
+            cognitoUser.confirmRegistration(confirmationCode, false, function(err, result) {
                 if (err) {
                     alert(err);
                     return;
