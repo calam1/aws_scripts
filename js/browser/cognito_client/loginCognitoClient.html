@@ -213,7 +213,7 @@
 
             //for my own sanity - this occurs cause of caching is my guess, I think you can manage this by using the functions in the client SDK
             if (AWS.config.credentials.params.IdentityId) {
-                alert('if you see this alert, the error is caused by page caching the AWS config credentials, you may be able to manage this with the functions provided in the client side SDK for cognito, since this is a test page and we are attempting to log in different users, it may be an issue. Look at the console for the pre existing Identity Id and additional info' + AWS.config.credentials.params.IdentityId);
+                alert('if you see this alert,it is caused by page caching the AWS config credentials, since this is a test page and we are attempting to log in different users, it may be an issue, but if you are transforming from an unauth to an auth user, this is NOT an error and legitimate. Look at the console for the pre existing Identity Id and additional info' + AWS.config.credentials.params.IdentityId);
                 console.log('how the hell do we have an identity id already?, prob caching of the AWS on the page', AWS.config.credentials.params.IdentityId);
                 console.log('we are going to error out because of this!!!!!!!!!!')
             }
