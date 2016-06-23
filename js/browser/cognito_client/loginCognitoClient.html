@@ -89,6 +89,15 @@
     <pre id="credentials"></pre>
     <br>
 
+    <h3> create unauthorized user </h3>
+
+    <form action="javascript:;" enctype="application/json" method="post" onsubmit="createUnauthUser(this)">
+        <input type="submit" value="Create Unauth User">
+    </form>
+
+    <pre id="createtUnauthUserResponse"></pre>
+    <br>
+
     <h3> get user attributes </h3>
 
     <form action="javascript:;" enctype="application/json" method="post" onsubmit="getAttrs(this)">
@@ -96,6 +105,7 @@
     </form>
 
     <pre id="getAttrsResponse"></pre>
+    <br>
 
     <h3> get S3 Bucket info </h3>
     <h5>*Bucket 'serverless.chris.cognito.create' is hard coded in function, has CORS config set up </h5>
@@ -105,7 +115,6 @@
     </form>
 
     <pre id="getS3Response"></pre>
-
     <br>
 
     <h3> sign out </h3>
@@ -114,6 +123,7 @@
     <form action="javascript:;" enctype="application/json" method="post" onsubmit="signout()">
         <input type="submit" value="Sign Out">
     </form>
+    <br>
 
     <h3> delete user </h3>
 
@@ -121,7 +131,6 @@
         <input type="submit" value="Delete User">
     </form>
     <pre id="getDeleteUserResponse"></pre>
-
     <br>
 
     <script>
@@ -147,6 +156,21 @@
         }
 
         function login(object) {
+
+            /*
+            // Maybe a possible way to see if user is already logged in - to prevent creation of a new idendity id
+            var data = { UserPoolId : 'us-east-1_Iqc12345', ClientId : '12345du353sm7khjj1q' }; 
+            var userPool = new AWSCognito.CognitoIdentityServiceProvider.CognitoUserPool(data); 
+            var cognitoUser = userPool.getCurrentUser(); 
+            if (cognitoUser != null) { 
+                cognitoUser.getSession(function(err, session) { 
+                    if (err) { alert(err); return; }
+                     console.log('session validity: ' + session.isValid()); 
+                }); 
+            }
+            */
+            
+            
             var username = object['username'].value;
             var password = object['password'].value;
             var identityId = object['identityId'].value;
@@ -218,11 +242,11 @@
                             console.log('get creds success', AWS.config.credentials);
 
                             // Credentials will be available when this function is called.
-                            var accessKeyId = AWS.config.credentials.accessKeyId;
-                            var secretAccessKey = AWS.config.credentials.secretAccessKey;
-                            var sessionToken = AWS.config.credentials.sessionToken;
+                            //var accessKeyId = AWS.config.credentials.accessKeyId;
+                            //var secretAccessKey = AWS.config.credentials.secretAccessKey;
+                            //var sessionToken = AWS.config.credentials.sessionToken;
 
-                            console.log("accessKeyId: " + accessKeyId);
+                            //console.log("accessKeyId: " + accessKeyId);
                         }
                     });
 
@@ -234,7 +258,6 @@
                     document.getElementById("credentials").innerHTML = JSON.stringify(AWS.config.credentials.params);
 
                     // Instantiate aws sdk service objects now that the credentials have been updated.
-                    // example: var s3 = new AWS.S3();
 
 
                     // for the following to connect properly, edit the CORS config in S3 for the bucket in question
@@ -280,6 +303,7 @@
             }, function(err, data) {
                 if (err) {
                     console.log('s3 bucket info error', err);
+                    alert('get s3 bucket error' + err);
                 } else {
                     console.log('s3 bucket info response', data);
                     document.getElementById("getS3Response").innerHTML = JSON.stringify(data);
@@ -316,6 +340,21 @@
                 }
             })
         };
+
+        function createUnauthUser() {
+            var creds = new AWS.CognitoIdentityCredentials({
+                IdentityPoolId: identityPoolId
+            });
+
+            AWS.config.credentials = creds;
+            AWS.config.region = 'us-east-1';
+
+            AWSCognito.config.region = 'us-east-1';
+            AWSCognito.config.credentials = creds;
+
+            document.getElementById("createtUnauthUserResponse").innerHTML = 'Created an unauthorized user';
+
+        }
     </script>
 
 </body>
