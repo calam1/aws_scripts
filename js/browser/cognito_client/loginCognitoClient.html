@@ -134,22 +134,27 @@
 
     <h2> Cognito Sync functions </h2>
 
-    <h3> list dataset </h3>
-
-    <form action="javascript:;" enctype="application/json" method="post" onsubmit="getCognitoSyncToken()">
-        <input type="submit" value="Get Cognito Dataset Information">
-    </form>
-    <pre id="getCognitoSyncTokenResponse"></pre>
-    <br>
-
-    <h3> add record to dataset - WARNING for now(will fix later) you must run function getCognitoSyncToken() which is the above function , 'list dataset'</h3>
+    <h3> add id record to dataset </h3>
     <h5> * we are just adding the identityId </h5>
 
-    <form action="javascript:;" enctype="application/json" method="post" onsubmit="addRecord()">
-        <input type="submit" value="Add Cognito Dataset Record ">
+    <form action="javascript:;" enctype="application/json" method="post" onsubmit="getCognitoSyncToken(this)">
+        <input type="hidden" name="value" value="id">
+        <input type="submit" value="Add Record">
     </form>
-    <pre id="addRecordResponse"></pre>
+    <!--<pre id="getCognitoSyncTokenResponse"></pre>-->
+    <pre id="addIdRecordResponse"></pre>
+
     <br>
+
+    <h3> add favorite foods record to dataset </h3>
+    <h5> * we are just adding a hard coded list of favorite foods</h5>
+
+    <form action="javascript:;" enctype="application/json" method="post" onsubmit="getCognitoSyncToken(this)">
+        <input type="hidden" name="value" value="">
+        <input type="submit" value="Add Favorite Foods">
+    </form>
+    <!--<pre id="getCognitoSyncTokenResponse"></pre>-->
+    <pre id="addRecordResponse"></pre>
 
     <script>
         // global variable to be set
@@ -393,7 +398,9 @@
         var COGNITO_SYNC_TOKEN;
         var cognitosync;
 
-        function getCognitoSyncToken() {
+        function getCognitoSyncToken(object) {
+            var value = object['value'].value;
+
             // Other AWS SDKs will automatically use the Cognito Credentials provider
             // configured in the JavaScript SDK.
             console.log('get cognito sync token - region value', AWS.config.region);
@@ -403,15 +410,24 @@
                 IdentityId: AWS.config.credentials.params.IdentityId,
                 IdentityPoolId: identityPoolId
             }, function(err, data) {
-                if (err) console.log('listRecords: '.red + err, err.stack);
-                else {
+                if (err) {
+                    console.log('listRecords: ', err, err.stack);
+                } else {
                     console.log('listRecords: ', JSON.stringify(data));
                     COGNITO_SYNC_TOKEN = data.SyncSessionToken;
                     COGNITO_SYNC_COUNT = data.DatasetSyncCount;
                     console.log('SyncSessionToken: ', COGNITO_SYNC_TOKEN);
                     console.log('DatasetSyncCount: ', COGNITO_SYNC_COUNT);
 
-                    document.getElementById("getCognitoSyncTokenResponse").innerHTML = JSON.stringify(data);
+                    //document.getElementById("getCognitoSyncTokenResponse").innerHTML = JSON.stringify(data);
+
+                    if (value === 'id') {
+                        console.log('adding id to dataset');
+                        addRecord();
+                    } else {
+                        console.log('adding favorite foods to dataset');
+                        addFavoriteFoods();
+                    }
                 }
             });
         };
@@ -437,10 +453,39 @@
                     console.log('updateRecords: ', err, err.stack);
                 } else {
                     console.log('updateRecords value: ', JSON.stringify(data));
+                    document.getElementById("addIdRecordResponse").innerHTML = JSON.stringify(data);
+                }
+            });
+        };
+
+        function addFavoriteFoods() {
+            var foods = ['pizza', 'hot dogs', 'brussel sprouts'];
+
+            console.log('stringify array', JSON.stringify(foods));
+
+            var params = {
+                DatasetName: COGNITO_DATASET_NAME,
+                IdentityId: AWS.config.credentials.params.IdentityId,
+                IdentityPoolId: identityPoolId,
+                SyncSessionToken: COGNITO_SYNC_TOKEN,
+                RecordPatches: [{
+                    Key: 'foods', // required
+                    Op: 'replace', // required
+                    SyncCount: COGNITO_SYNC_COUNT,
+                    Value: JSON.stringify(foods)
+                }]
+            };
+
+            console.log('UserID: ', AWS.config.credentials.params.IdentityId);
+            cognitosync.updateRecords(params, function(err, data) {
+                if (err) {
+                    console.log('updateFoodsRecords: ', err, err.stack);
+                } else {
+                    console.log('updateFoodsRecords value: ', JSON.stringify(data));
                     document.getElementById("addRecordResponse").innerHTML = JSON.stringify(data);
                 }
             });
-        }
+        };
     </script>
 
 </body>
