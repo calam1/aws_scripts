@@ -19,7 +19,7 @@
 
     <h2> Cognito Identity functions</h2>
 
-    <h3>Default Values</h3> ClientId: 7civ431fec41bb280096co5vp8<br> UserPoolId: us-east-1_DLWkDQlGD<br> IdentityPoolId: us-east-1:633d5440-9196-45f7-839c-0c118877b380<br>
+    <h3>Default Values</h3> ClientId: 363i0p7gsp02jul6nt2pcr98d0<br> UserPoolId: us-east-1_dKpo6FDb4<br> IdentityPoolId: us-east-1:d9a017f9-58a5-43f9-9849-a1a1fe54ed3d<br>
 
     <h3> Values used in the functions (if blank then the default values are what is stated in the notes above) </h3>
     <label>Client Id: </label>
@@ -158,9 +158,9 @@
 
     <script>
         // global variable to be set
-        var clientId = '7civ431fec41bb280096co5vp8';
-        var poolId = 'us-east-1_DLWkDQlGD';
-        var identityPoolId = 'us-east-1:633d5440-9196-45f7-839c-0c118877b380';
+        var clientId = '363i0p7gsp02jul6nt2pcr98d0';
+        var poolId = 'us-east-1_dKpo6FDb4';
+        var identityPoolId = 'us-east-1:d9a017f9-58a5-43f9-9849-a1a1fe54ed3d';
 
         var cognitoUser;
 
@@ -250,7 +250,10 @@
                     console.log('authenticate user result', result);
 
                     creds.params.Logins = {};
-                    creds.params.Logins['cognito-idp.us-east-1.amazonaws.com/us-east-1_DLWkDQlGD'] = result.getIdToken().getJwtToken();
+                    
+                    //creds.params.Logins['cognito-idp.us-east-1.amazonaws.com/us-east-1_dKpo6FDb4'] = result.getIdToken().getJwtToken();
+                    var tokenUrl = 'cognito-idp.us-east-1.amazonaws.com/' + poolId;
+                    creds.params.Logins[tokenUrl] = result.getIdToken().getJwtToken();
 
                     AWS.config.credentials.expired = true;
 
@@ -443,7 +446,7 @@
                     Key: 'USER_ID', // required
                     Op: 'replace', // required
                     SyncCount: COGNITO_SYNC_COUNT,
-                    Value: AWS.config.credentials.params.IdentityId
+                    Value: JSON.stringify(AWS.config.credentials.params.IdentityId)
                 }]
             };
 
