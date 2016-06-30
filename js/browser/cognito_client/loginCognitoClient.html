@@ -156,6 +156,16 @@
     <!--<pre id="getCognitoSyncTokenResponse"></pre>-->
     <pre id="addRecordResponse"></pre>
 
+    <h3> add allergens record to dataset </h3>
+    <h5> * we are just adding a hard coded list of allergens</h5>
+
+    <form action="javascript:;" enctype="application/json" method="post" onsubmit="getCognitoSyncToken(this)">
+        <input type="hidden" name="value" value="allergens">
+        <input type="submit" value="Add Allergens">
+    </form>
+    <!--<pre id="getCognitoSyncTokenResponse"></pre>-->
+    <pre id="addAllergenRecordResponse"></pre>
+
     <script>
         // global variable to be set
         var clientId = '363i0p7gsp02jul6nt2pcr98d0';
@@ -250,7 +260,7 @@
                     console.log('authenticate user result', result);
 
                     creds.params.Logins = {};
-                    
+
                     //creds.params.Logins['cognito-idp.us-east-1.amazonaws.com/us-east-1_dKpo6FDb4'] = result.getIdToken().getJwtToken();
                     var tokenUrl = 'cognito-idp.us-east-1.amazonaws.com/' + poolId;
                     creds.params.Logins[tokenUrl] = result.getIdToken().getJwtToken();
@@ -427,6 +437,9 @@
                     if (value === 'id') {
                         console.log('adding id to dataset');
                         addRecord();
+                    } else if (value === 'allergens') {
+                        console.log('adding allergens to dataset');
+                        addAllergens();
                     } else {
                         console.log('adding favorite foods to dataset');
                         addFavoriteFoods();
@@ -443,7 +456,7 @@
                 IdentityPoolId: identityPoolId,
                 SyncSessionToken: COGNITO_SYNC_TOKEN,
                 RecordPatches: [{
-                    Key: 'USER_ID', // required
+                    Key: 'id', // required
                     Op: 'replace', // required
                     SyncCount: COGNITO_SYNC_COUNT,
                     Value: JSON.stringify(AWS.config.credentials.params.IdentityId)
@@ -462,7 +475,7 @@
         };
 
         function addFavoriteFoods() {
-            var foods = ['pizza', 'hot dogs', 'brussel sprouts'];
+            var foods = ['pizza', 'burgers', 'fries'];
 
             console.log('stringify array', JSON.stringify(foods));
 
@@ -486,6 +499,35 @@
                 } else {
                     console.log('updateFoodsRecords value: ', JSON.stringify(data));
                     document.getElementById("addRecordResponse").innerHTML = JSON.stringify(data);
+                }
+            });
+        };
+
+        function addAllergens() {
+            var foods = ['seeds', 'milk', 'tree nuts'];
+
+            console.log('stringify array', JSON.stringify(foods));
+
+            var params = {
+                DatasetName: COGNITO_DATASET_NAME,
+                IdentityId: AWS.config.credentials.params.IdentityId,
+                IdentityPoolId: identityPoolId,
+                SyncSessionToken: COGNITO_SYNC_TOKEN,
+                RecordPatches: [{
+                    Key: 'allergens', // required
+                    Op: 'replace', // required
+                    SyncCount: COGNITO_SYNC_COUNT,
+                    Value: JSON.stringify(foods)
+                }]
+            };
+
+            console.log('UserID: ', AWS.config.credentials.params.IdentityId);
+            cognitosync.updateRecords(params, function(err, data) {
+                if (err) {
+                    console.log('updateAllergenssRecords: ', err, err.stack);
+                } else {
+                    console.log('updateAllergenssRecords value: ', JSON.stringify(data));
+                    document.getElementById("addAllergenRecordResponse").innerHTML = JSON.stringify(data);
                 }
             });
         };
