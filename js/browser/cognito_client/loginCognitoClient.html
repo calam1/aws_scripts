@@ -156,12 +156,12 @@
     <!--<pre id="getCognitoSyncTokenResponse"></pre>-->
     <pre id="addRecordResponse"></pre>
 
-    <h3> add allergens record to dataset </h3>
-    <h5> * we are just adding a hard coded list of allergens</h5>
+    <h3> add allergens and username record to dataset </h3>
+    <h5> * we are just adding a hard coded list of allergens and username</h5>
 
     <form action="javascript:;" enctype="application/json" method="post" onsubmit="getCognitoSyncToken(this)">
         <input type="hidden" name="value" value="allergens">
-        <input type="submit" value="Add Allergens">
+        <input type="submit" value="Add Allergens and Username">
     </form>
     <!--<pre id="getCognitoSyncTokenResponse"></pre>-->
     <pre id="addAllergenRecordResponse"></pre>
@@ -518,6 +518,11 @@
                     Op: 'replace', // required
                     SyncCount: COGNITO_SYNC_COUNT,
                     Value: JSON.stringify(foods)
+                }, {
+                    Key: 'username', // required
+                    Op: 'replace', // required
+                    SyncCount: COGNITO_SYNC_COUNT,
+                    Value: JSON.stringify('clam')
                 }]
             };
 
