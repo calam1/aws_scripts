@@ -27,25 +27,25 @@
         function myFunction(obj) {
             //alert(obj['data'].value);
 
-            window.apigClient = apigClientFactory.newClient({
-                apiKey: 'NgOYFQJhC25lWH7YNNVqTaEbiL2Hj8rP7f3M9rVc',
+            var apigClient = apigClientFactory.newClient({
+                'accessKey':'accesskey',
+                'secretKey':'secretkey'
+
             });
 
             var params = {
-                headers: {
-                    'Content-Type': 'application/json'
-                }
             };
 
             var body = {
 
             };
 
-            var additionalParams = {};
+            var additionalParams = {
+            };
 
-            window.apigClient.userPost(params, body, additionalParams)
+            apigClient.userGet(params, body, additionalParams)
                 .then(function(result) {
-                    console.log('this is the result', result);
+                    console.log('this is the result', JSON.stringify(result));
                     // Add success callback code here.
                 }).catch(function(result) {
                     // Add error callback code here.

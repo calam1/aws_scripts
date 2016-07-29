@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html>
 
 <head>
@@ -11,7 +10,17 @@
     <script src="lib/aws-sdk.min.js"></script>
     <script src="lib/amazon-cognito-identity.min.js"></script>
 
-
+    <script type="text/javascript" src="lib/axios/dist/axios.standalone.js"></script>
+    <script type="text/javascript" src="lib/CryptoJS/rollups/hmac-sha256.js"></script>
+    <script type="text/javascript" src="lib/CryptoJS/rollups/sha256.js"></script>
+    <script type="text/javascript" src="lib/CryptoJS/components/hmac.js"></script>
+    <script type="text/javascript" src="lib/CryptoJS/components/enc-base64.js"></script>
+    <script type="text/javascript" src="lib/url-template/url-template.js"></script>
+    <script type="text/javascript" src="lib/apiGatewayCore/sigV4Client.js"></script>
+    <script type="text/javascript" src="lib/apiGatewayCore/apiGatewayClient.js"></script>
+    <script type="text/javascript" src="lib/apiGatewayCore/simpleHttpClient.js"></script>
+    <script type="text/javascript" src="lib/apiGatewayCore/utils.js"></script>
+    <script type="text/javascript" src="apigClient.js"></script>
 </head>
 
 <body>
@@ -19,7 +28,7 @@
 
     <h2> Cognito Identity functions</h2>
 
-    <h3>Default Values</h3> ClientId: 363i0p7gsp02jul6nt2pcr98d0<br> UserPoolId: us-east-1_dKpo6FDb4<br> IdentityPoolId: us-east-1:d9a017f9-58a5-43f9-9849-a1a1fe54ed3d<br>
+    <h3>Default Values</h3> ClientId: 1cmkh58lpth5ceo1li3re4h8se<br> UserPoolId: us-east-1_5xDWIAVI1 <br> IdentityPoolId: us-east-1:fcd9cfbd-fa67-429e-9b4c-e8d29b909b7e<br>
 
     <h3> Values used in the functions (if blank then the default values are what is stated in the notes above) </h3>
     <label>Client Id: </label>
@@ -166,11 +175,22 @@
     <!--<pre id="getCognitoSyncTokenResponse"></pre>-->
     <pre id="addAllergenRecordResponse"></pre>
 
+    <h3> Access user data Authentication Required </h3>
+
+    <form action="javascript:;" enctype="application/json" method="post" onsubmit="myAuthenticatedFunction(this)">
+        <input type="submit" value="Access user data">
+    </form>
+    <pre id="authenticatedResponse"></pre>
+
     <script>
         // global variable to be set
-        var clientId = '363i0p7gsp02jul6nt2pcr98d0';
-        var poolId = 'us-east-1_dKpo6FDb4';
-        var identityPoolId = 'us-east-1:d9a017f9-58a5-43f9-9849-a1a1fe54ed3d';
+        var clientId = '1cmkh58lpth5ceo1li3re4h8se';
+        var poolId = 'us-east-1_5xDWIAVI1';
+        var identityPoolId = 'us-east-1:fcd9cfbd-fa67-429e-9b4c-e8d29b909b7e';
+
+        var accessKeyId;
+        var secretAccessKey;
+        var sessionToken;
 
         var cognitoUser;
 
@@ -191,15 +211,15 @@
         function login(object) {
 
             /*
-            // Maybe a possible way to see if user is already logged in - to prevent creation of a new idendity id
-            var data = { UserPoolId : 'us-east-1_Iqc12345', ClientId : '12345du353sm7khjj1q' }; 
-            var userPool = new AWSCognito.CognitoIdentityServiceProvider.CognitoUserPool(data); 
-            var cognitoUser = userPool.getCurrentUser(); 
-            if (cognitoUser != null) { 
-                cognitoUser.getSession(function(err, session) { 
+            // Maybe a possible way to see if user is already logged in - to prevent creation of a new identity id
+            var data = { UserPoolId : 'us-east-1_Iqc12345', ClientId : '12345du353sm7khjj1q' };
+            var userPool = new AWSCognito.CognitoIdentityServiceProvider.CognitoUserPool(data);
+            var cognitoUser = userPool.getCurrentUser();
+            if (cognitoUser != null) {
+                cognitoUser.getSession(function(err, session) {
                     if (err) { alert(err); return; }
-                     console.log('session validity: ' + session.isValid()); 
-                }); 
+                     console.log('session validity: ' + session.isValid());
+                });
             }
             */
 
@@ -215,14 +235,14 @@
             AWS.config.region = 'us-east-1';
 
             if (identityId) {
-                AWS.config.credentials.IdentityId = idendityId;
+                AWS.config.credentials.IdentityId = identityId;
             }
 
             AWSCognito.config.region = 'us-east-1';
             AWSCognito.config.credentials = creds;
 
             if (identityId) {
-                AWSCognito.config.credentials.IdentityId = idendityId;
+                AWSCognito.config.credentials.IdentityId = identityId;
             }
 
             var authenticationData = {
@@ -281,13 +301,14 @@
                             console.log('get creds success', AWS.config.credentials);
 
                             // Credentials will be available when this function is called.
-                            var accessKeyId = AWS.config.credentials.accessKeyId;
-                            //var secretAccessKey = AWS.config.credentials.secretAccessKey;
-                            //var sessionToken = AWS.config.credentials.sessionToken;
+                            accessKeyId = AWS.config.credentials.accessKeyId;
+                            secretAccessKey = AWS.config.credentials.secretAccessKey;
+                            sessionToken = AWS.config.credentials.sessionToken;
 
                             console.log("in creds.get - accessKeyId: " + accessKeyId);
+                            console.log("in creds.get - secretyKey: " + secretAccessKey);
+                            console.log("in creds.get - sessionToken: " + sessionToken);
                             console.log('UserID: ', AWS.config.credentials.params.IdentityId);
-
                         }
                     });
 
@@ -399,7 +420,7 @@
                     alert('create unauth user error' + err);
                 } else {
                     console.log('create unauth user resp', AWS.config.credentials);
-                    document.getElementById("createtUnauthUserResponse").innerHTML = 'Created an unauthorized user, idendity id value is: ' + AWS.config.credentials.identityId;
+                    document.getElementById("createtUnauthUserResponse").innerHTML = 'Created an unauthorized user, identity id value is: ' + AWS.config.credentials.identityId;
                 }
             });
         };
@@ -522,11 +543,12 @@
                     Key: 'username', // required
                     Op: 'replace', // required
                     SyncCount: COGNITO_SYNC_COUNT,
-                    Value: JSON.stringify('clam')
+                    Value: 'clam'
                 }]
             };
 
             console.log('UserID: ', AWS.config.credentials.params.IdentityId);
+            console.log('date: ', AWS.config);
             cognitosync.updateRecords(params, function(err, data) {
                 if (err) {
                     console.log('updateAllergenssRecords: ', err, err.stack);
@@ -536,6 +558,46 @@
                 }
             });
         };
+
+        /////////////// cognito sync code END
+
+        function myAuthenticatedFunction(obj) {
+            console.log("in authenticate function accessKeyId: " + accessKeyId);
+            console.log("in authenticate function secretyKey: " + secretAccessKey);
+
+            var apigClient = apigClientFactory.newClient({
+                'accessKey': accessKeyId,
+                'secretKey': secretAccessKey,
+                'sessionToken': sessionToken
+
+            });
+
+            /*
+                        var apigClient = apigClientFactory.newClient({
+                            'accessKey': accessKeyId,
+                            'secretKey': secretAccessKey,
+                            'sessionToken': sessionToken,
+                            'region': 'us-east-1'
+                        });
+            */
+            var params = {};
+
+            var body = {
+
+            };
+
+            var additionalParams = {};
+
+            apigClient.userGet(params, body, additionalParams)
+                .then(function(result) {
+                    console.log('this is the result', JSON.stringify(result));
+                    document.getElementById("authenticatedResponse").innerHTML = JSON.stringify(result);
+                    // Add success callback code here.
+                }).catch(function(result) {
+                    // Add error callback code here.
+                    console.log('this is an error', result);
+                });
+        }
     </script>
 
 </body>
